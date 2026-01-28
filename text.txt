@@ -1,0 +1,227 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+\usepackage{geometry}
+\geometry{left=2.5cm, right=2cm, top=2cm, bottom=2cm}
+\usepackage{graphicx}
+\usepackage{titlesec}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{float}
+\usepackage{indentfirst}
+\usepackage{setspace}
+\usepackage{titling}
+\usepackage{fancyhdr}
+
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegray},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{red},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=4,
+    frame=single
+}
+
+\lstset{style=mystyle}
+
+\titleformat{\section}{\normalfont\Large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection}{1em}{}
+
+% Титульный лист
+\title{
+    \vspace*{2cm}
+    \Large\textbf{ОТЧЕТ ПО ЛАБОРАТОРНОЙ РАБОТЕ} \\
+    \vspace{0.5cm}
+    \normalsize Работа с потоками, процессами и аргументами командной строки в C++
+    \vspace{2cm}
+}
+\author{
+    \textbf{Выполнила:} \\
+    Клюкина Ольга Сергеевна \\
+    \vspace{0.5cm}
+    \textbf{Группа:} \\
+    ИПо8481
+    \vspace{2cm}
+}
+\date{}
+
+% Для отдельного титульного листа без номера страницы
+\renewcommand{\maketitle}{
+    \begin{titlepage}
+        \centering
+        \vspace*{2cm}
+        
+        {\LARGE\textbf{ОТЧЕТ ПО ЛАБОРАТОРНОЙ РАБОТЕ}}
+        
+        \vspace{1.5cm}
+        
+        {\Large\textbf{Работа с потоками, процессами и аргументами командной строки в C++}}
+        
+        \vspace{3cm}
+        
+        {\large Выполнила:}
+        
+        \vspace{0.3cm}
+        
+        {\Large\textbf{Клюкина Ольга Сергеевна}}
+        
+        \vspace{1cm}
+        
+        {\large Группа:}
+        
+        \vspace{0.3cm}
+        
+        {\Large\textbf{ИПо8481}}
+        
+        \vspace{4cm}
+        
+        {\large \today}
+        
+        \vfill
+    \end{titlepage}
+}
+
+\begin{document}
+
+\maketitle
+
+
+\setcounter{page}{1}
+
+\section{Постановка задачи}
+\begin{enumerate}
+    \item Разделить обычный вывод программы и вывод ошибок.
+    \item Посмотреть, как у процесса выглядят файловые дескрипторы (номера 0,1,2) и куда они ведут.
+    \item Разобраться с командой \verb|./hw 1>> output 2>> error|.
+    \item Ввести переменную \verb|a| с клавиатуры и вернуть её из \verb|main()| как код возврата, а потом этот код поймать.
+    \item Научиться считывать аргументы, которые передают программе при запуске (то, что пишут в консоли после её имени).
+    \item Потренироваться работать с массивами на 12 элементов.
+    \item Напечатать то, что лежит в \verb|argc| и \verb|argv[]|.
+\end{enumerate}
+
+\section{Вербальная модель}
+\begin{enumerate}
+    \item \textbf{Разделяем потоки:} Программа может печатать в два разных места: обычный текст (\verb|cout|) и ошибки (\verb|cerr|). Обычно всё лезет в одну консоль и путается. Мы растаскиваем это по разным файлам с помощью \verb|1>> output 2>> error|. Цифра \verb|1| — это обычный вывод, \verb|2| — ошибки, \verb|>>| — значит "дописать в файл".
+    
+    \item \textbf{Смотрим дескрипторы процесса:} Каждая запущенная программа — процесс. У него есть номер (PID). В папке \verb|/proc| есть подпапки для всех процессов. Зайдя в папку своего процесса, можно увидеть, куда смотрят его дескрипторы \verb|0|, \verb|1|, \verb|2| — на консоль или на файлы, которые мы создали.
+    
+    \item \textbf{Возвращаем свой код:} Программа может вернуть число, чтобы сообщить, как она завершилась. 0 — хорошо, не 0 — ошибка. Мы просим ввести число \verb|a| и делаем \verb|return a;|. Чтобы увидеть, что вернулось, сразу после запуска программы пишешь \verb|echo $?|.
+    
+    \item \textbf{Аргументы командной строки:} Программе можно что-то передать при запуске: \verb|./hw первый второй|. Внутри программы это попадает в \verb|argv| (массив строк), а их количество — в \verb|argc|. Это похоже на массив из 4-го пункта, только тут строки и размер не фиксированный.
+    
+    \item \textbf{Работаем с массивом (про носки):} Вместо 12 переменных \verb|носок1, носок2...| делаем один массив \verb|int socks[12];|. У каждого элемента есть номер (индекс), начиная с 0. Циклом \verb|for| проходим по всем, присваиваем значения (\verb|socks[i] = i|) и потом печатаем. Переменная \verb|i| в цикле — это счётчик, который увеличивается на 1 каждый шаг (\verb|i++|).
+\end{enumerate}
+
+\section{Математическая модель}
+\begin{enumerate}
+    \item \textbf{Потоки ввода-вывода:}
+    \begin{itemize}
+        \item \textbf{Ввод (дескриптор 0):} То, что программа читает (например, с клавиатуры).
+        \item \textbf{Обычный вывод (дескриптор 1):} То, что программа печатает через \verb|cout|.
+        \item \textbf{Вывод ошибок (дескриптор 2):} То, что программа печатает через \verb|cerr|.
+        \item \textbf{Перенаправление:} Команда \verb|./hw 1>>output 2>>error| означает: всё, что шло в обычный вывод (1), теперь идёт в файл \verb|output|. Всё, что шло в вывод ошибок (2), теперь идёт в файл \verb|error|.
+    \end{itemize}
+    
+    \item \textbf{Массив из 12 элементов (носки):}
+    \begin{itemize}
+        \item Создаём массив: \verb|socks[12]| (12 ячеек для чисел).
+        \item \textbf{Присваивание:} Берём каждую ячейку по порядку (от 0 до 11) и кладём в неё её же номер: \verb|socks[0] = 0|, \verb|socks[1] = 1|, ..., \verb|socks[11] = 11|.
+        \item \textbf{Печать:} Берём каждую ячейку по порядку и печатаем её номер и то, что в ней лежит.
+    \end{itemize}
+    
+    \item \textbf{Аргументы командной строки:}
+    \begin{itemize}
+        \item При запуске программы можно передать слова: \verb|./hw слово1 слово2|.
+        \item \textbf{argc:} Количество переданных слов (включая само имя программы \verb|./hw|).
+        \item \textbf{argv:} Список этих слов. \verb|argv[0]| — первое слово (обычно имя программы), \verb|argv[1]| — второе слово и так далее.
+        \item \textbf{Печать:} Печатаем \verb|argc| (сколько слов), а потом все слова по порядку.
+    \end{itemize}
+    
+    \item \textbf{Код возврата:}
+    \begin{itemize}
+        \item Программа может вернуть число (код завершения).
+        \item \textbf{0} означает "всё хорошо".
+        \item \textbf{Не 0} означает "произошла ошибка".
+        \item \textbf{Модель:} Программа просит ввести число \verb|a| и возвращает его: \verb|return a;|. Система получает это число и может его прочитать.
+    \end{itemize}
+\end{enumerate}
+
+\section{Декомпозиция}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{diagram.png} 
+    \caption{Блок-схема работы программ}
+    \label{fig:diagram}
+\end{figure}
+
+\section{Программа на языке высокого уровня (C++)}
+Ниже представлены скриншоты кода программы:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{first.png}
+    \caption{Часть 1: Вывод "Hello world" и "ERROR"}
+    \label{fig:first}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{second.png}
+    \caption{Часть 2: Вывод массива}
+    \label{fig:second}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{third.png}
+    \caption{Часть 3: Обработка аргументов командной строки}
+    \label{fig:third}
+\end{figure}
+
+\section{Проверка на основе математической модели}
+\begin{enumerate}
+    \item \textbf{Потоки:} Запустили \verb|./hw 1>>output 2>>error|. В \verb|output| попали все сообщения от \verb|cout|. В \verb|error| — только \verb|"ERROR (err)"|. \textbf{Работает как в модели.}
+    
+    \item \textbf{Массив socks:} Программа вывела ровно 12 строк: \verb|Socks[0] = 0|, \verb|Socks[1] = 1|, ..., \verb|Socks[11] = 11|. \textbf{Массив работает верно.}
+    
+    \item \textbf{Аргументы:} Запустили \verb|./hw|. Программа напечатала, что \verb|argc=3|, и вывела три аргумента: \verb|./hw|, \textbf{Аргументы считались правильно.}
+    
+    \item \textbf{Код возврата:} Ввели число \verb|7|. После завершения программы команда \verb|echo $?| показала \verb|7|. \textbf{Код возврата передан в систему.}
+\end{enumerate}
+
+\section{Выводы}
+\begin{enumerate}
+    \item Модель правильно описывает, как всё должно работать.
+    \item Она простая и понятная.
+    \item Не учитывает какие-то сложные штуки (например, если потоков больше), но для нашей задачи этого хватило.
+    \item На практике всё сработало именно так, как было запланировано в модели.
+\end{enumerate}
+
+\section{Заключение}
+Всё, что было в задачах, сделали:
+\begin{itemize}
+    \item Научились разделять вывод и ошибки по разным файлам.
+    \item Увидели, как процесс хранит свои дескрипторы в \verb|/proc|.
+    \item Поняли, как работает \verb|1>>| и \verb|2>>|.
+    \item Вернули своё число из программы и поймали его через \verb|echo $?|.
+    \item Научились принимать аргументы при запуске.
+    \item Попрактиковались с массивами на 12 элементов.
+\end{itemize}
+
+\end{document}
