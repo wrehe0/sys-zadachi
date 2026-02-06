@@ -1,7 +1,7 @@
 #include<iostream>   
 #include<string>     
 #include<algorithm>  
-
+#include<cstdlib>
 using namespace std;
 
 bool check_n(int n) {
@@ -24,7 +24,8 @@ string to_base_n(int num, int base) {
     }
     return r;
 }
-
+void gethelp();
+string =="--help"
 int main() {
     int n;
     cout << "n = ";
